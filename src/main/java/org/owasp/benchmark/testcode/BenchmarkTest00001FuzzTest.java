@@ -6,7 +6,10 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
+import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.catalina.webresources.DirResourceSet;
+import org.apache.catalina.webresources.StandardRoot;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -23,18 +26,22 @@ class BenchmarkTest00001FuzzTest {
 
     static private Context context;
     static private Tomcat tomcat;
-    static private String contextPath;
+    final static private String contextPath = "/";
 
     @BeforeAll
     static void setup() {
         tomcat = new Tomcat();
-        tomcat.setBaseDir("temp");
         tomcat.setPort(8080);
 
-        contextPath = "/";
-        String docBase = new File(".").getAbsolutePath();
-
+        String webappDirLocation = "src/main/webapp/";
+        String docBase = new File(webappDirLocation).getAbsolutePath();
         context = tomcat.addContext(contextPath, docBase);
+
+        WebResourceRoot resources = new StandardRoot(context);
+
+        resources.addPreResources(new DirResourceSet(resources, "/",
+                docBase, "/"));
+        context.setResources(resources);
 
         try {
             tomcat.start();
@@ -55,19 +62,10 @@ class BenchmarkTest00001FuzzTest {
     @Test
     void startupTomcat() {
 
-        HttpServlet servlet = new HttpServlet() {
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                PrintWriter writer = resp.getWriter();
+        HttpServlet servlet = new BenchmarkTest00001();
 
-                writer.println("<html><title>Welcome</title><body>");
-                writer.println("<h1>Have a Great Day!</h1>");
-                writer.println("</body></html>");
-            }
-        };
-
-        String servletName = "Servlet1";
-        String urlPattern = "/go";
+        String servletName = "BenchmarkTest00001";
+        String urlPattern = "/pathtraver-00/BenchmarkTest00001";
 
         tomcat.addServlet(contextPath, servletName, servlet);
         context.addServletMappingDecoded(urlPattern, servletName);
@@ -75,7 +73,7 @@ class BenchmarkTest00001FuzzTest {
         final OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
-                .url("http://localhost:8080/go")
+                .url("http://localhost:8080" + urlPattern)
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
