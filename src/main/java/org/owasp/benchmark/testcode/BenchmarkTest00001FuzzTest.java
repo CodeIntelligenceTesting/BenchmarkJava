@@ -1,17 +1,16 @@
 package org.owasp.benchmark.testcode;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
-import org.apache.catalina.Wrapper;
 import org.apache.catalina.startup.Tomcat;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -42,7 +41,15 @@ class BenchmarkTest00001FuzzTest {
         } catch (LifecycleException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    @AfterAll
+    static void tearDown() {
+        try {
+            tomcat.stop();
+        } catch (LifecycleException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -65,8 +72,21 @@ class BenchmarkTest00001FuzzTest {
         tomcat.addServlet(contextPath, servletName, servlet);
         context.addServletMappingDecoded(urlPattern, servletName);
 
-        tomcat.getServer().await();
+        final OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url("http://localhost:8080/go")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            System.out.println(response.body().string());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+//        tomcat.getServer().await();
     }
+
 
     @FuzzTest
     void fuzzTest(HttpServletRequest request, HttpServletResponse response) {
