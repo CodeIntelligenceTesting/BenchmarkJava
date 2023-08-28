@@ -26,21 +26,29 @@ class BenchmarkTest00001FuzzTest {
 
     static private Context context;
     static private Tomcat tomcat;
-    final static private String contextPath = "/";
+    //    A context path in Apache Tomcat refers to the name of the website as presented by the browser.
+    //    For example, imagine I tell you to enter "localhost:8080/DemoWebsite/DateJSP. jsp" in your browser. The context path is "DemoWebsite"
+    final static private String contextPath = "";
+
 
     @BeforeAll
     static void setup() {
         tomcat = new Tomcat();
         tomcat.setPort(8080);
+        tomcat.getConnector();
 
         String webappDirLocation = "src/main/webapp/";
+//        String webappDirLocation = "/DOC_BASE";
         String docBase = new File(webappDirLocation).getAbsolutePath();
         context = tomcat.addContext(contextPath, docBase);
+        System.out.println(context.getPath());
 
         WebResourceRoot resources = new StandardRoot(context);
+        System.out.println(docBase);
 
-        resources.addPreResources(new DirResourceSet(resources, "/",
+        resources.addPreResources(new DirResourceSet(resources, "/WEB_APP_MOUNT",
                 docBase, "/"));
+        
         context.setResources(resources);
 
         try {
