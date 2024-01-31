@@ -1,3 +1,4 @@
+.cifuzz-*
 .DS_Store
 .java-version
 .classpath

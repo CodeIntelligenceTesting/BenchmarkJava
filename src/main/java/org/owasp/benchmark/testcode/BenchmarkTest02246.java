@@ -44,7 +44,9 @@ public class BenchmarkTest02246 extends HttpServlet {
         String param = "";
         if (!map.isEmpty()) {
             String[] values = map.get("BenchmarkTest02246");
-            if (values != null) param = values[0];
+            if (values != null) {
+                param = values[0];
+            }
         }
 
         String bar = doSomething(request, param);
